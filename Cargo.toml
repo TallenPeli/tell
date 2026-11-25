@@ -1,0 +1,8 @@
+[package]
+name = "tell"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { version = "4.6.10", features = ["cargo"] }
+mlua = { version = "0.12.3", features = ["lua55", "vendored"] }
