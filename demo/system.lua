@@ -1,9 +1,7 @@
-print("Lua is running!")
+require("tell")
 
-local function add(a, b)
-	return a + b
-end
+print(tell.system.distro)
+print(tell.system.pkg_manager)
+print(tell.system.arch)
 
-greet("Tallen")
-
-print("Math result: ", add(1, 2))
+tell.ping("ping")

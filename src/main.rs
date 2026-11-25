@@ -8,6 +8,19 @@ fn get_absolute_path(script: &str) -> Result<PathBuf, std::io::Error> {
     return Ok(path);
 }
 
+// TODO: Implement a function to get the distro, pkg_manager, and arch dynamically instead of hardcoding them.
+fn get_distro() -> String {
+    return "arch".to_string();
+}
+
+fn get_pkg_manager() -> String {
+    return "pacman".to_string();
+}
+
+fn get_arch() -> String {
+    return "x86_64".to_string();
+}
+
 fn main() {
     let matches = command!().arg(Arg::new("script")).get_matches();
 
@@ -35,14 +48,33 @@ fn main() {
         .unwrap();
 
     let lua = Lua::new();
-    let greet = lua
-        .create_function(|_, name: String| {
-            println!("Hello, {}!", name);
+
+    let system = lua
+        .create_table_from([
+            ("distro", get_distro()),
+            ("pkg_manager", get_pkg_manager()),
+            ("arch", get_arch()),
+        ])
+        .unwrap();
+
+    let ping = lua
+        .create_function(|_, str: String| {
+            if str == "ping" {
+                println!("pong");
+            } else {
+                println!(":(");
+            }
             Ok(())
         })
         .unwrap();
 
-    lua.globals().set("greet", greet).unwrap();
+    let tell = lua.create_table().unwrap();
+    tell.set("system", system).unwrap();
+    tell.set("ping", ping).unwrap();
+
+    // Allows you to add `require("tell")` in Lua scripts to access the `tell` module
+    lua.register_module("tell", tell.clone()).unwrap();
+    lua.globals().set("tell", tell).unwrap();
 
     lua.load(contents.as_str()).exec().unwrap();
 }
