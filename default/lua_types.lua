@@ -1,3 +1,7 @@
+-- ==============================
+-- EDIT `init.lua` TO GET STARTED
+-- ==============================
+
 ---@meta
 
 ---System information populated automatically by `tell` before evaluating your config.
