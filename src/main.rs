@@ -1,4 +1,3 @@
-use clap::builder::OsStr;
 use clap::{arg, command, value_parser};
 use mlua::Lua;
 use std::path::PathBuf;
@@ -17,6 +16,11 @@ fn get_config_dir() -> Option<PathBuf> {
     dirs::config_dir().map(|dir| dir.join("tell"))
 }
 
+fn get_config_file() -> Option<PathBuf> {
+    let config_dir = get_config_dir().unwrap();
+    Some(config_dir.join("init.lua"))
+}
+
 // TODO: Implement a function to get the distro, pkg_manager, and arch dynamically instead of hardcoding them.
 fn get_distro() -> String {
     return "arch".to_string();
@@ -26,8 +30,14 @@ fn get_pkg_manager() -> String {
     return "pacman".to_string();
 }
 
+// Get system archetecture
 fn get_arch() -> String {
-    return "x86_64".to_string();
+    if let Ok(output) = Command::new("uname").args(&["-m"]).output() {
+        let arch = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        println!("Detected architecture: {}", arch);
+        return arch;
+    }
+    return String::from("unknown");
 }
 
 fn config_init() -> Result<(), std::io::Error> {
@@ -44,6 +54,7 @@ fn config_init() -> Result<(), std::io::Error> {
     } else {
         println!("{:?} exists, skipping creation", init_lua_path.clone()) // TODO debug function
     }
+    println!("{:?}", init_lua_path);
 
     // Create types.lua
     if !lua_types_path.exists() {
@@ -109,11 +120,14 @@ fn main() {
     let config_dir = get_config_dir()
         .expect("No configuration directory found. Manually pass the path to init.lua");
 
-    println!("Using config: {:?}", config_dir); // TODO debug function
+    let arch = get_arch();
+    let script = get_config_file().expect("No init.lua found. Manually pass the path to init.lua");
+
+    println!("Using config: {:?}", script); // TODO debug function
 
     match app_m.subcommand() {
         Some(("apply", sub_m)) => {
-            println!("Used apply")
+            println!("Used apply. sub_m: {:?}", sub_m);
         }
         Some(("plan", sub_m)) => {
             println!("Used plan")
@@ -128,19 +142,16 @@ fn main() {
         _ => {}
     }
 
-    let script = "test";
-    // Get the script argument from the command line
-    // println!("{}", script);
+    println!("{:?}", &script);
+    let abs_path = script.clone();
 
     // Get the absolute path of the script
-    let abs_path = get_absolute_path(script)
-        .map_err(|e| {
-            eprintln!("'{}': {}", script, e);
-            std::process::exit(1);
-        })
-        .unwrap();
-
-    println!("Script path: {:?}", abs_path);
+    // let abs_path = get_absolute_path(script)
+    //     .map_err(|e| {
+    //         eprintln!("'{}': {}", script, e);
+    //         std::process::exit(1);
+    //     })
+    //     .unwrap();
 
     // Read the contents of the script file
     let contents = fs::read_to_string(abs_path.clone())

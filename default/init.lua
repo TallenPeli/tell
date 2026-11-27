@@ -10,3 +10,5 @@ require("types.lua")
 --
 
 tell.pkgs({ "nvim", "git" })
+
+print("System arch: ", tell.system.arch)
