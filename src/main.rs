@@ -1,5 +1,7 @@
 use clap::{arg, command, value_parser};
 use mlua::Lua;
+use std::fs::File;
+use std::io::{Error, Read};
 use std::path::PathBuf;
 use std::process::Command;
 use std::{env, fs};
@@ -21,20 +23,45 @@ fn get_config_file() -> Option<PathBuf> {
     Some(config_dir.join("init.lua"))
 }
 
-// TODO: Implement a function to get the distro, pkg_manager, and arch dynamically instead of hardcoding them.
-fn get_distro() -> String {
-    return "arch".to_string();
+// Returns the values of `ID` from /etc/os-release
+fn get_distro_id() -> Result<String, Error> {
+    let mut file = File::open("/etc/os-release")?;
+    let mut buff = String::new();
+
+    file.read_to_string(&mut buff)?;
+
+    // Parse out ID
+    let mut id = String::new();
+    for line in buff.lines() {
+        if line.starts_with("ID=") {
+            id = line.replace("ID=", "");
+        }
+    }
+
+    // If NAME was not found, return unknown
+    if id == String::new() {
+        return Ok("unknown".to_string());
+    }
+
+    return Ok(id);
 }
 
-fn get_pkg_manager() -> String {
-    return "pacman".to_string();
+// TODO
+fn command_exists(cmd: &str) -> bool {
+    return false;
+}
+
+// TODO Just use a map for now...
+fn get_pkg_manager() -> Option<&'static str> {
+    // Known supported package managers...
+    const MANAGERS: &[&str] = &["pacman", "apt", "dnf"];
+    MANAGERS.iter().copied().find(|&pm| command_exists(pm))
 }
 
 // Get system archetecture
 fn get_arch() -> String {
     if let Ok(output) = Command::new("uname").args(&["-m"]).output() {
         let arch = String::from_utf8_lossy(&output.stdout).trim().to_string();
-        println!("Detected architecture: {}", arch);
         return arch;
     }
     return String::from("unknown");
@@ -117,6 +144,9 @@ fn main() {
             )
         .get_matches();
 
+    // Initialize config at startup if it hasn't been already
+    config_init().unwrap();
+
     let config_dir = get_config_dir()
         .expect("No configuration directory found. Manually pass the path to init.lua");
 
@@ -162,12 +192,19 @@ fn main() {
         .unwrap();
 
     let lua = Lua::new();
+    let distro_id = get_distro_id().unwrap();
+    let pkg_manager = match get_pkg_manager() {
+        Some(pm) => pm,
+        None => "unknown",
+    };
+
+    let arch = get_arch();
 
     let system = lua
         .create_table_from([
-            ("distro", get_distro()),
-            ("pkg_manager", get_pkg_manager()),
-            ("arch", get_arch()),
+            ("distro_id", distro_id),
+            ("pkg_manager", pkg_manager.to_string()),
+            ("arch", arch),
         ])
         .unwrap();
 

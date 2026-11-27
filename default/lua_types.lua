@@ -7,7 +7,7 @@
 ---System information populated automatically by `tell` before evaluating your config.
 ---You can override `pkg_manager` at the top of `init.lua` if needed.
 ---@class TellSystem
----@field distro string Detected distro ID from `/etc/os-release` (e.g. `"arch"`, `"fedora"`, `"ubuntu"`).
+---@field distro_id string Detected distro id from `/etc/os-release` (e.g. `"arch"`, `"fedora"`, `"ubuntu"`).
 ---@field pkg_manager string Detected or overridden package manager (`"pacman"`, `"dnf"`, `"apt"`, etc.).
 ---@field arch string CPU architecture (e.g. `"x86_64"`, `"aarch64"`).
 

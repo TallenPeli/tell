@@ -1,4 +1,4 @@
-require("types.lua")
+-- require("types.lua")
 --
 -- ============================================
 -- YOU ARE USING THE DEFAULT TELL CONFIGURATION
@@ -9,6 +9,8 @@ require("types.lua")
 -- https://github.com/TallenPeli/tell/docs/index.md
 --
 
-tell.pkgs({ "nvim", "git" })
+-- tell.pkgs({ "nvim", "git" })
 
-print("System arch: ", tell.system.arch)
+print("System Arch: ", tell.system.arch)
+print("Distro Name: ", tell.system.distro_id)
+print("System Package Manager", tell.system.pkg_manager)
